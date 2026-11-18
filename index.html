@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro de Localização</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --border: #d1d5db;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #f3f4f6;
+      --secondary-hover: #e5e7eb;
+      --success-bg: #ecfdf5;
+      --success-text: #065f46;
+      --success-border: #a7f3d0;
+      --error-bg: #fef2f2;
+      --error-text: #991b1b;
+      --error-border: #fecaca;
+      --radius: 12px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --surface: #1e293b;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --secondary: #334155;
+        --secondary-hover: #475569;
+        --success-bg: #064e3b;
+        --success-text: #a7f3d0;
+        --success-border: #059669;
+        --error-bg: #7f1d1d;
+        --error-text: #fecaca;
+        --error-border: #dc2626;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .gps-bar {
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--secondary-hover);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .coords-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 420px) {
+      .coords-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--surface);
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    input.invalid {
+      border-color: #ef4444;
+    }
+
+    .map-preview {
+      display: none;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+
+    .map-preview.visible {
+      display: block;
+    }
+
+    .map-preview a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .map-preview a:hover {
+      text-decoration: underline;
+    }
+
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+      border: 1px solid transparent;
+    }
+
+    .alert.visible {
+      display: block;
+    }
+
+    .alert.success {
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    .alert.error {
+      background-color: var(--error-bg);
+      color: var(--error-text);
+      border-color: var(--error-border);
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .history {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+
+    .history.visible {
+      display: block;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .history-header h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      font-size: 0.82rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--secondary);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .history-item span:last-child {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Check-in de Localização</h1>
+      <p>Capture suas coordenadas via GPS ou preencha manualmente para registrar.</p>
+    </header>
+
+    <div id="statusAlert" class="alert" role="status" aria-live="polite"></div>
+
+    <div class="gps-bar">
+      <button type="button" id="btnGps" class="btn btn-secondary">
+        <span id="gpsIcon">📍</span>
+        <span id="gpsText">Usar minha localização atual</span>
+      </button>
+    </div>
+
+    <form id="locationForm" novalidate>
+      <div class="form-group">
+        <label for="localInput">Nome do Local</label>
+        <input
+          type="text"
+          id="localInput"
+          name="entry.1227901560"
+          placeholder="Ex.: Matriz, Cliente X, Ponto de Coleta"
+          required
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="coords-grid">
+        <div class="form-group">
+          <label for="latInput">Latitude</label>
+          <input
+            type="text"
+            id="latInput"
+            name="entry.1811456845"
+            placeholder="-19.916681"
+            inputmode="decimal"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="lngInput">Longitude</label>
+          <input
+            type="text"
+            id="lngInput"
+            name="entry.147098017"
+            placeholder="-43.934493"
+            inputmode="decimal"
+            required
+          />
+        </div>
+      </div>
+
+      <div id="mapPreview" class="map-preview">
+        <a id="mapLink" href="#" target="_blank" rel="noopener noreferrer">
+          ↗ Conferir ponto no Google Maps
+        </a>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="btn btn-primary">
+        Enviar Registro
+      </button>
+    </form>
+
+    <section id="historySection" class="history" aria-label="Registros recentes">
+      <div class="history-header">
+        <h2>Últimos envios (este dispositivo)</h2>
+        <button type="button" id="btnClearHistory" class="clear-btn">Limpar</button>
+      </div>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      // Configuração do Google Forms
+      const FORM_ACTION_URL =
+        "https://docs.google.com/forms/d/e/1FAIpQLScYslMO6l4a4FWJy_bCBiUpNTW2hFi5Tqn1Rkrcu6c7rOfQyw/formResponse";
+
+      const FIELDS = {
+        local: "entry.1227901560",
+        latitude: "entry.1811456845",
+        longitude: "entry.147098017",
+      };
+
+      const STORAGE_KEY = "geo_checkin_history_v1";
+
+      // Elementos do DOM
+      const form = document.getElementById("locationForm");
+      const localInput = document.getElementById("localInput");
+      const latInput = document.getElementById("latInput");
+      const lngInput = document.getElementById("lngInput");
+      const btnGps = document.getElementById("btnGps");
+      const gpsIcon = document.getElementById("gpsIcon");
+      const gpsText = document.getElementById("gpsText");
+      const btnSubmit = document.getElementById("btnSubmit");
+      const statusAlert = document.getElementById("statusAlert");
+      const mapPreview = document.getElementById("mapPreview");
+      const mapLink = document.getElementById("mapLink");
+      const historySection = document.getElementById("historySection");
+      const historyList = document.getElementById("historyList");
+      const btnClearHistory = document.getElementById("btnClearHistory");
+
+      function showAlert(message, type) {
+        statusAlert.textContent = message;
+        statusAlert.className = `alert visible ${type}`;
+      }
+
+      function hideAlert() {
+        statusAlert.className = "alert";
+      }
+
+      function normalizeCoord(value) {
+        return value.trim().replace(",", ".");
+      }
+
+      function isValidLatitude(val) {
+        if (val === "") return false;
+        const num = Number(val);
+        return Number.isFinite(num) && num >= -90 && num <= 90;
+      }
+
+      function isValidLongitude(val) {
+        if (val === "") return false;
+        const num = Number(val);
+        return Number.isFinite(num) && num >= -180 && num <= 180;
+      }
+
+      function updateMapPreview() {
+        const lat = normalizeCoord(latInput.value);
+        const lng = normalizeCoord(lngInput.value);
+
+        if (isValidLatitude(lat) && isValidLongitude(lng)) {
+          mapLink.href = `https://www.google.com/maps?q=${encodeURIComponent(lat)},${encodeURIComponent(lng)}`;
+          mapPreview.classList.add("visible");
+        } else {
+          mapPreview.classList.remove("visible");
+        }
+      }
+
+      // Geocodificação reversa opcional para sugerir o nome do local caso o campo esteja vazio
+      async function suggestPlaceName(lat, lng) {
+        if (localInput.value.trim() !== "") return;
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+            { headers: { Accept: "application/json" } }
+          );
+          if (!response.ok) return;
+          const data = await response.json();
+          if (data && data.display_name && localInput.value.trim() === "") {
+            const parts = data.display_name.split(",").slice(0, 3).map((p) => p.trim());
+            localInput.value = parts.join(", ");
+          }
+        } catch {
+          // Falha silenciosa: usuário pode preencher manualmente
+        }
+      }
+
+      function setGpsLoading(loading) {
+        btnGps.disabled = loading;
+        if (loading) {
+          gpsIcon.innerHTML = '<span class="spinner"></span>';
+          gpsText.textContent = "Obtendo coordenadas...";
+        } else {
+          gpsIcon.textContent = "📍";
+          gpsText.textContent = "Usar minha localização atual";
+        }
+      }
+
+      btnGps.addEventListener("click", () => {
+        hideAlert();
+
+        if (!("geolocation" in navigator)) {
+          showAlert("Seu navegador não suporta geolocalização.", "error");
+          return;
+        }
+
+        setGpsLoading(true);
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude.toFixed(6);
+            const lng = position.coords.longitude.toFixed(6);
+
+            latInput.value = lat;
+            lngInput.value = lng;
+            latInput.classList.remove("invalid");
+            lngInput.classList.remove("invalid");
+            updateMapPreview();
+
+            await suggestPlaceName(lat, lng);
+            setGpsLoading(false);
+            showAlert("Coordenadas capturadas com sucesso.", "success");
+          },
+          (error) => {
+            setGpsLoading(false);
+            const messages = {
+              1: "Permissão de localização negada. Libere o acesso nas configurações do navegador.",
+              2: "Não foi possível determinar sua localização no momento.",
+              3: "Tempo esgotado ao tentar obter o sinal de GPS.",
+            };
+            showAlert(messages[error.code] || "Erro ao capturar localização.", "error");
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0,
+          }
+        );
+      });
+
+      latInput.addEventListener("input", () => {
+        latInput.classList.remove("invalid");
+        updateMapPreview();
+      });
+
+      lngInput.addEventListener("input", () => {
+        lngInput.classList.remove("invalid");
+        updateMapPreview();
+      });
+
+      localInput.addEventListener("input", () => {
+        localInput.classList.remove("invalid");
+      });
+
+      // Histórico local
+      function renderHistory() {
+        const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        if (!items.length) {
+          historySection.classList.remove("visible");
+          return;
+        }
+
+        historyList.innerHTML = items
+          .map(
+            (item) => `
+            <li class="history-item">
+              <span><strong>${escapeHtml(item.local)}</strong> (${escapeHtml(item.lat)}, ${escapeHtml(item.lng)})</span>
+              <span>${escapeHtml(item.time)}</span>
+            </li>`
+          )
+          .join("");
+
+        historySection.classList.add("visible");
+      }
+
+      function saveToHistory(local, lat, lng) {
+        const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        const now = new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        items.unshift({ local, lat, lng, time: now });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 5)));
+        renderHistory();
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      btnClearHistory.addEventListener("click", () => {
+        localStorage.removeItem(STORAGE_KEY);
+        renderHistory();
+      });
+
+      // Submissão para o Google Forms
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        hideAlert();
+
+        const local = localInput.value.trim();
+        const lat = normalizeCoord(latInput.value);
+        const lng = normalizeCoord(lngInput.value);
+
+        let hasError = false;
+
+        if (!local) {
+          localInput.classList.add("invalid");
+          hasError = true;
+        }
+
+        if (!isValidLatitude(lat)) {
+          latInput.classList.add("invalid");
+          hasError = true;
+        }
+
+        if (!isValidLongitude(lng)) {
+          lngInput.classList.add("invalid");
+          hasError = true;
+        }
+
+        if (hasError) {
+          showAlert("Verifique os campos destacados. Latitude deve estar entre -90 e 90, e Longitude entre -180 e 180.", "error");
+          return;
+        }
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span class="spinner"></span> Enviando...';
+
+        const payload = new URLSearchParams();
+        payload.append(FIELDS.local, local);
+        payload.append(FIELDS.latitude, lat);
+        payload.append(FIELDS.longitude, lng);
+
+        try {
+          // mode: 'no-cors' é obrigatório para envio direto ao Google Forms sem bloqueio de CORS
+          await fetch(FORM_ACTION_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: payload,
+          });
+
+          saveToHistory(local, lat, lng);
+          form.reset();
+          updateMapPreview();
+          showAlert("Registro enviado com sucesso para a planilha!", "success");
+        } catch {
+          showAlert("Falha de conexão ao enviar os dados. Verifique sua internet.", "error");
+        } finally {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = "Enviar Registro";
+        }
+      });
+
+      renderHistory();
+    })();
+  </script>
+</body>
+</html>
